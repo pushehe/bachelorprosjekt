@@ -43,7 +43,6 @@
 #include "fstorage.h"
 #include "fds.h"
 #include "peer_manager.h"
-
 #include "bsp.h"
 #include "bsp_btn_ble.h"
 #include "sensorsim.h"
@@ -707,8 +706,7 @@ static void bsp_event_handler(bsp_event_t event)
 
 
 /**@brief Function for initializing the Advertising functionality.
- */
-static void advertising_init(void)
+ */tatic void advertising_init(void)
 {
     uint32_t               err_code;
     ble_advdata_t          advdata;
@@ -758,7 +756,7 @@ static void buttons_leds_init(bool * p_erase_bonds)
  */
 static void power_manage(void)
 {
-    uint32_t err_code = sd_app_evt_wait();
+    uint32_terr_code = sd_app_evt_wait();
 
     APP_ERROR_CHECK(err_code);
 }

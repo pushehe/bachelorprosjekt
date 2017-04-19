@@ -1,0 +1,157 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: µVision V5.23.0.0
+Copyright (C) 2017 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Tallak Wiers, Octoscopus, LIC=IC9UH-WYAH9-JM498-33278-99MMU-X5G41
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Professional  Version: 5.23
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 4 (build 422)
+Assembler:       Armasm.exe V5.06 update 4 (build 422)
+Linker/Locator:  ArmLink.exe V5.06 update 4 (build 422)
+Library Manager: ArmAr.exe V5.06 update 4 (build 422)
+Hex Converter:   FromElf.exe V5.06 update 4 (build 422)
+CPU DLL:         
+Dialog DLL:      
+Target DLL:      Segger\JL2CM3.dll V2.99.23.0
+Dialog DLL:      TCM.DLL V1.27.0.0
+ 
+<h2>Project:</h2>
+D:\Programmer\Dropbox\UiA\ELE301 Bachelor\bachelorprosjekt\Keil\Master og Slave\examples\ble_peripheral_SLAVE\ble_app_template\pca10040\s132\arm5_no_packs\ble_app_template_pca10040_s132.uvprojx
+Project File Date:  04/15/2017
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 4 (build 422)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'nrf52832_xxaa'
+compiling boards.c...
+compiling bsp.c...
+compiling main.c...
+..\..\..\main.c(709): error:  #77-D: this declaration has no storage class or type specifier
+   */tatic void advertising_init(void)
+..\..\..\main.c(709): error:  #65: expected a ";"
+   */tatic void advertising_init(void)
+..\..\..\main.c(800): warning:  #12-D: parsing restarts here after previous syntax error
+      
+RF_LOG_INFO("Template started\r\n");
+..\..\..\main.c(801): warning:  #1295-D: Deprecated declaration application_timers_start - give arg types
+      application_timers_start();
+..\..\..\main.c(801): error:  #260-D: explicit type is missing ("int" assumed)
+      application_timers_start();
+..\..\..\main.c(801): error:  #147: declaration is incompatible with "void application_timers_start(void)"  (declared at line 396)
+      application_timers_start();
+..\..\..\main.c(802): error:  #77-D: this declaration has no storage class or type specifier
+      err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+..\..\..\main.c(802): error:  #59: function call is not allowed in a constant expression
+      err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+..\..\..\main.c(803): error:  #169: expected a declaration
+      
+PP_ERROR_CHECK(err_code);
+..\..\..\main.c(806): error:  #169: expected a declaration
+      for (;;)
+..\..\..\main.c(818): warning: At end of source:  #12-D: parsing restarts here after previous syntax error
+..\..\..\main.c(106): warning:  #177-D: variable "m_adv_uuids"  was declared but never referenced
+  static ble_uuid_t m_adv_uuids[] = {{BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}}; /**< Universally unique service identifiers. */
+..\..\..\main.c(108): error:  #114: function "advertising_start"  was referenced but not defined
+  static void advertising_start(void);
+..\..\..\main.c(232): warning:  #177-D: function "timers_init"  was declared but never referenced
+  static void timers_init(void)
+..\..\..\main.c(255): warning:  #177-D: function "gap_params_init"  was declared but never referenced
+  static void gap_params_init(void)
+..\..\..\main.c(311): warning:  #177-D: function "services_init"  was declared but never referenced
+  static void services_init(void)
+..\..\..\main.c(373): warning:  #177-D: function "conn_params_init"  was declared but never referenced
+  static void conn_params_init(void)
+..\..\..\main.c(396): warning:  #177-D: function "application_timers_start"  was declared but never referenced
+  static void application_timers_start(void)
+..\..\..\main.c(432): warning:  #177-D: function "on_adv_evt"  was declared but never referenced
+  static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
+..\..\..\main.c(590): warning:  #177-D: function "ble_stack_init"  was declared but never referenced
+  static void ble_stack_init(void)
+..\..\..\main.c(630): warning:  #177-D: function "peer_manager_init"  was declared but never referenced
+  static void peer_manager_init(bool erase_bonds)
+..\..\..\main.c(672): warning:  #177-D: function "bsp_event_handler"  was declared but never referenced
+  static void bsp_event_handler(bsp_event_t event)
+..\..\..\main.c: 13 warnings, 9 errors
+compiling bsp_nfc.c...
+compiling bsp_btn_ble.c...
+compiling ble_advdata.c...
+compiling ble_advertising.c...
+compiling ble_conn_params.c...
+compiling ble_conn_state.c...
+compiling ble_srv_common.c...
+compiling gatt_cache_manager.c...
+compiling gatts_cache_manager.c...
+compiling peer_data_storage.c...
+compiling peer_data.c...
+compiling id_manager.c...
+compiling peer_id.c...
+compiling peer_database.c...
+compiling peer_manager.c...
+compiling pm_buffer.c...
+compiling pm_mutex.c...
+compiling security_dispatcher.c...
+compiling security_manager.c...
+compiling nrf_drv_clock.c...
+compiling nrf_drv_common.c...
+compiling app_button.c...
+compiling nrf_drv_gpiote.c...
+compiling nrf_drv_uart.c...
+compiling app_error_weak.c...
+compiling app_error.c...
+compiling app_timer.c...
+compiling crc16.c...
+compiling app_util_platform.c...
+compiling fds.c...
+compiling hardfault_implementation.c...
+compiling fstorage.c...
+compiling sdk_errors.c...
+compiling sensorsim.c...
+compiling nrf_assert.c...
+compiling sdk_mapped_flags.c...
+compiling nrf_log_backend_serial.c...
+compiling RTT_Syscalls_KEIL.c...
+compiling SEGGER_RTT_printf.c...
+compiling nrf_log_frontend.c...
+assembling arm_startup_nrf52.s...
+compiling SEGGER_RTT.c...
+compiling softdevice_handler.c...
+compiling system_nrf52.c...
+".\_build\nrf52832_xxaa.axf" - 9 Error(s), 13 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.5.0.pack
+                ARM::CMSIS:CORE:4.3.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 4.3.0
+
+Package Vendor: NordicSemiconductor
+                http://developer.nordicsemi.com/nRF5_SDK/pieces/nRF_DeviceFamilyPack/NordicSemiconductor.nRF_DeviceFamilyPack.8.11.1.pack
+                NordicSemiconductor::Device:Startup:8.11.1
+                Nordic Semiconductor nRF ARM devices Device Family Pack.
+   * Component: Startup Version: 8.11.1
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_nrf52832_xxaa
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\CMSIS\Include
+  C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_DeviceFamilyPack\8.11.1\Device\Include
+  C:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_DeviceFamilyPack\8.12.0\Device\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:4.3.0
+
+   * Component: NordicSemiconductor::Device:Startup:8.11.1
+      Include file:  Device\Include\system_nrf52.h
+      Source file:   Device\Source\system_nrf52.c
+      Source file:   Device\Source\arm\arm_startup_nrf52.s
+Target not created.
+Build Time Elapsed:  00:00:18
+</pre>
+</body>
+</html>

@@ -25,6 +25,13 @@
 #include "softdevice_handler.h"
 #include "ble_advdata.h"
 #include "ble_nus_c.h"
+#include "fstorage.h"
+#include "fds.h"
+#include "peer_manager.h"
+#include "ble_conn_state.h"
+#include "ble_detect_c.h"
+
+
 
 #define CENTRAL_LINK_COUNT      1                               /**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT   0                               /**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
@@ -56,9 +63,19 @@
 #define UUID32_SIZE             4                               /**< Size of 32 bit UUID */
 #define UUID128_SIZE            16                              /**< Size of 128 bit UUID */
 
+#define SEC_PARAM_BOND                  1                                           /**< Perform bonding. */
+#define SEC_PARAM_MITM                  0                                           /**< Man In The Middle protection not required. */
+#define SEC_PARAM_LESC                  0                                           /**< LE Secure Connections not enabled. */
+#define SEC_PARAM_KEYPRESS              0                                           /**< Keypress notifications not enabled. */
+#define SEC_PARAM_IO_CAPABILITIES       BLE_GAP_IO_CAPS_NONE                        /**< No I/O capabilities. */
+#define SEC_PARAM_OOB                   0                                           /**< Out Of Band data not available. */
+#define SEC_PARAM_MIN_KEY_SIZE          7                                           /**< Minimum encryption key size. */
+#define SEC_PARAM_MAX_KEY_SIZE          16                                          /**< Maximum encryption key size. */
+
 static ble_nus_c_t              m_ble_nus_c;                    /**< Instance of NUS service. Must be passed to all NUS_C API calls. */
 static ble_db_discovery_t       m_ble_db_discovery;             /**< Instance of database discovery module. Must be passed to all db_discovert API calls */
 
+void ble_advertising_on_sys_evt(uint32_t sys_evt);
 /**
  * @brief Connection parameters requested for connection.
  */
@@ -439,10 +456,36 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
  */
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
+		/** The Connection state module has to be fed BLE events in order to function correctly
+     * Remember to call ble_conn_state_on_ble_evt before calling any ble_conns_state_* functions. */
     on_ble_evt(p_ble_evt);
     bsp_btn_ble_on_ble_evt(p_ble_evt);
     ble_db_discovery_on_ble_evt(&m_ble_db_discovery, p_ble_evt);
     ble_nus_c_on_ble_evt(&m_ble_nus_c,p_ble_evt);
+		
+		/*
+    YOUR_JOB: Add service ble_evt handlers calls here, like, for example:
+    ble_bas_on_ble_evt(&m_bas, p_ble_evt);
+    */
+		
+    // Forward BLE events to the Connection State module.
+		// This must be called before any event handler that uses this module.
+		ble_conn_state_on_ble_evt(p_ble_evt);
+
+		// Forward BLE events to the Peer Manager
+		pm_on_ble_evt(p_ble_evt);
+}
+
+static void sys_evt_dispatch(uint32_t sys_evt)
+{
+    // Dispatch the system event to the fstorage module, where it will be
+    // dispatched to the Flash Data Storage (FDS) module.
+    fs_sys_event_handler(sys_evt);
+
+    // Dispatch to the Advertising module last, since it will check if there are any
+    // pending flash operations in fstorage. Let fstorage process system events first,
+    // so that it can report correctly to the Advertising module.
+    ble_advertising_on_sys_evt(sys_evt);
 }
 
 /**@brief Function for initializing the BLE stack.
@@ -476,6 +519,10 @@ static void ble_stack_init(void)
 
     // Register with the SoftDevice handler module for BLE events.
     err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
+    APP_ERROR_CHECK(err_code);
+		
+    // Register with the SoftDevice handler module for BLE events.
+    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -579,6 +626,80 @@ static void power_manage(void)
 }
 
 
+
+/**@brief Function for handling the Device Manager events.
+ *
+ * @param[in] p_evt  Data associated to the device manager event.
+ */
+static void pm_evt_handler(pm_evt_t const * p_evt)
+{
+    switch(p_evt->evt_id)
+    {
+        case PM_EVT_BONDED_PEER_CONNECTED:
+        case PM_EVT_CONN_SEC_START:
+        case PM_EVT_CONN_SEC_SUCCEEDED:
+        case PM_EVT_CONN_SEC_FAILED:
+        case PM_EVT_CONN_SEC_CONFIG_REQ:
+        case PM_EVT_STORAGE_FULL:
+        case PM_EVT_ERROR_UNEXPECTED:
+        case PM_EVT_PEER_DATA_UPDATE_SUCCEEDED:
+        case PM_EVT_PEER_DATA_UPDATE_FAILED:
+        case PM_EVT_PEER_DELETE_SUCCEEDED:
+        case PM_EVT_PEER_DELETE_FAILED:
+        case PM_EVT_PEERS_DELETE_SUCCEEDED:
+        case PM_EVT_PEERS_DELETE_FAILED:
+        case PM_EVT_LOCAL_DB_CACHE_APPLIED:
+        case PM_EVT_LOCAL_DB_CACHE_APPLY_FAILED:
+        case PM_EVT_SERVICE_CHANGED_IND_SENT:
+        case PM_EVT_SERVICE_CHANGED_IND_CONFIRMED:
+        default:
+            break;
+    }
+}
+
+
+/**@brief Function for the Device Manager initialization.
+ *
+ * @param[in] erase_bonds  Indicates whether bonding information should be cleared from
+ *                         persistent storage during initialization of the Device Manager.
+ */
+static void peer_manager_init(bool erase_bonds)
+{
+    ble_gap_sec_params_t sec_param;
+    ret_code_t err_code;
+
+    err_code = pm_init();
+    APP_ERROR_CHECK(err_code);
+
+    if (erase_bonds)
+    {
+        err_code = pm_peers_delete();
+        APP_ERROR_CHECK(err_code);
+    }
+
+    memset(&sec_param, 0, sizeof(ble_gap_sec_params_t));
+
+    // Security parameters to be used for all security procedures.
+    sec_param.bond              = SEC_PARAM_BOND;
+    sec_param.mitm              = SEC_PARAM_MITM;
+    sec_param.lesc              = SEC_PARAM_LESC;
+    sec_param.keypress          = SEC_PARAM_KEYPRESS;
+    sec_param.io_caps           = SEC_PARAM_IO_CAPABILITIES;
+    sec_param.oob               = SEC_PARAM_OOB;
+    sec_param.min_key_size      = SEC_PARAM_MIN_KEY_SIZE;
+    sec_param.max_key_size      = SEC_PARAM_MAX_KEY_SIZE;
+    sec_param.kdist_own.enc     = 1;
+    sec_param.kdist_own.id      = 1;
+    sec_param.kdist_peer.enc    = 1;
+    sec_param.kdist_peer.id     = 1;
+
+    err_code = pm_sec_params_set(&sec_param);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = pm_register(pm_evt_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
 int main(void)
 {
 
@@ -588,7 +709,12 @@ int main(void)
     buttons_leds_init();
     db_discovery_init();
     ble_stack_init();
-    nus_c_init();
+    nus_c_init();	
+		
+		bool erase_bonds;
+		
+		peer_manager_init(erase_bonds);
+		
 
     // Start scanning for peripherals and initiate connection
     // with devices that advertise NUS UUID.
