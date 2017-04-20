@@ -6,11 +6,11 @@ ligger koden som slaven kjører. Under Applications hvor main.c er, ligger ble_d
 ble_detect med en egen service UUID. Denne servicen inneholder for tiden èn characteristics med egen charachteristisk UUID (se ble_detect.h). 
 Denne characteristicen tar imot verdien til sensoren og sender denne til softdevicen og verdien kan sees hvis man kobler til med bluetooth
 (enheten heter NRF_Slave). funksjonen sensor_characteristic_update() i bunnen av ble_detect.c oppdaterer characteristicsen med verdier fra 
-funksjonen timer_timeout_handler() i main. Dette er en midlertidig funksjon som incrementer en variabel "temperature" hver gang funksjonen
+funksjonen door_is_closed() i main. Dette er en midlertidig funksjon som incrementer en variabel "temperature" hver gang funksjonen
 kjøres. Dette bestemmes ut ifra en timer:
-        APP_TIMER_DEF(m_our_char_timer_id);
-        med intervall
-        #define OUR_CHAR_TIMER_INTERVAL 		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) //1000 ms intervals
+
+        APP_TIMER_DEF(m_our_door_timer_id);
+        #define TOGGLE_DOOR_TIMER    APP_TIMER_TICKS(10000, APP_TIMER_PRESCALER) // Interval         for closing the door. 10 seconds.
         
         timeren opprettes i timers_init(void);
         og startes i application_timers_start();
