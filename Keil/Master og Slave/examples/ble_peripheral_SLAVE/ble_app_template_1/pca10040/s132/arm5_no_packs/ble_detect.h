@@ -13,7 +13,8 @@
 #define BLE_UUID_OUR_BASE_UUID              {0x23, 0xD1, 0x13, 0xEF, 0x5F, 0x78, 0x23, 0x15, 0xDE, 0xEF, 0x12, 0x12, 0x00, 0x00, 0x00, 0x00} // 128-bit base UUID
 #define BLE_UUID_OUR_SERVICE                0xABCD // Just a random, but recognizable value
 
-#define BLE_UUID_CHARACTERISTIC_UUID		0xBEEF
+#define BLE_UUID_CHARACTERISTIC_UUID				0xBEEF
+#define BLE_UUID_CHARACTERISTICS_DOOR_UUID 	0xFEED
 /**
  * @brief This structure contains various status information for our service. 
  * It only holds one entry now, but will be populated with more items as we go.
@@ -24,8 +25,8 @@
 typedef struct
 {
     uint16_t									conn_handle;
-		uint16_t									service_handle;     /**< Handle of Our Service (as provided by the BLE stack). */
-		ble_gatts_char_handles_t	char_handles;		
+    uint16_t									service_handle;     /**< Handle of Our Service (as provided by the BLE stack). */
+    ble_gatts_char_handles_t	char_handles;		
 }ble_os_t;
 
 /**@brief Function for handling BLE Stack events related to our service and characteristic.
@@ -51,5 +52,6 @@ void ble_detect_init(ble_os_t * p_ble_detect);
  * @param[in]   sensor_value     				New characteristic value.
  */
 void sensor_characteristic_update(ble_os_t *p_ble_detect, uint32_t *sensor_value);
+void door_characteristic_update(ble_os_t *p_ble_detect, uint32_t *sensor_value);
 
 #endif  /* _ BLE_DETECT_H__ */

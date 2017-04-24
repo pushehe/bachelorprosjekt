@@ -27,7 +27,6 @@
 #include "boards.h"
 #include "nrf_gpio.h"
 #include "peer_manager.h"
-#include "ble_hrs_c.h"
 #include "ble_bas_c.h"
 #include "app_util.h"
 #include "app_timer.h"
@@ -70,7 +69,9 @@
 
 #define TARGET_UUID                 BLE_UUID_HEART_RATE_SERVICE         /**< Target device name that application is looking for. */
 
+#define PIN_9 9
 
+uint32_t gprs_module = 0;
 /**@breif Macro to unpack 16bit unsigned UUID from octet stream. */
 #define UUID16_EXTRACT(DST, SRC) \
     do                           \
@@ -132,6 +133,8 @@ static const ble_gap_addr_t m_target_periph_addr =
 
 static void scan_start(void);
 
+//APP_TIMER_DEF(m_our_char_timer_id);
+//#define OUR_CHAR_TIMER_INTERVAL     APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) // 1000 ms intervals
 
 /**@brief Function for asserts in the SoftDevice.
  *
@@ -147,6 +150,27 @@ static void scan_start(void);
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(0xDEADBEEF, line_num, p_file_name);
+}
+
+// ALREADY_DONE_FOR_YOU: This is a timer event handler
+// static void timer_timeout_handler(void * p_context)
+//{
+//    // OUR_JOB: Step 3.F, Update temperature and characteristic value.
+//		int32_t temperature = 0;   
+//		sd_temp_get(&temperature);
+//		our_termperature_characteristic_update(&m_ble_detect_c, &temperature);
+//		nrf_gpio_pin_toggle(LED_4);
+//}
+
+static void timers_init(void)
+{
+
+    // Initialize timer module.
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
+//
+//    // OUR_JOB: Step 3.H, Initiate our timer
+//		app_timer_create(&m_our_char_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
+//
 }
 
 
@@ -301,6 +325,12 @@ static uint32_t adv_report_parse(uint8_t type, data_t * p_advdata, data_t * p_ty
     return NRF_ERROR_NOT_FOUND;
 }
 
+/**@brief Function for starting timers.
+*/
+//static void application_timers_start(void)
+//{
+//    app_timer_start(m_our_char_timer_id, OUR_CHAR_TIMER_INTERVAL, NULL);
+//}
 
 /**@brief Function for putting the chip into sleep mode.
  *
@@ -645,6 +675,8 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     bsp_btn_ble_on_ble_evt(p_ble_evt);
     nrf_ble_gatt_on_ble_evt(&m_gatt, p_ble_evt);
     on_ble_evt(p_ble_evt);
+	
+
 }
 
 
@@ -1139,6 +1171,21 @@ void gatt_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
+void close_door(void)
+{
+		nrf_gpio_cfg_sense_input(PIN_9, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+		
+		gprs_module = nrf_gpio_pin_read(PIN_9);
+		
+		if (gprs_module == 0)
+		{
+			 // skrive til slaven	
+		}
+		else
+		{
+			// skrive til slaven
+		}
+}
 
 int main(void)
 {

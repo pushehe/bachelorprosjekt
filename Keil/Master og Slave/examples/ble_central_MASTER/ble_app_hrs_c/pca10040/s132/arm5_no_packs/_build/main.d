@@ -61,7 +61,6 @@
 .\_build\main.o: ..\..\..\..\..\..\components\softdevice\s132\headers\nrf_nvic.h
 .\_build\main.o: ..\..\..\..\..\..\components\ble\peer_manager\peer_database.h
 .\_build\main.o: ..\..\..\..\..\..\components\ble\peer_manager\peer_manager_internal.h
-.\_build\main.o: ..\..\..\..\..\..\components\ble\ble_services\ble_hrs_c\ble_hrs_c.h
 .\_build\main.o: ..\..\..\..\..\..\components\ble\ble_services\ble_bas_c\ble_bas_c.h
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\timer\app_timer.h
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\bsp\bsp.h

@@ -67,8 +67,10 @@
 #define SEC_PARAM_MIN_KEY_SIZE          7                                           /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE          16                                          /**< Maximum encryption key size. */
 
-#define DEAD_BEEF                        0xDEADBEEF                                 /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
+#define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+								
+uint32_t drive = 1;
 uint32_t temperature = 0;
 uint32_t sensor0 = 0;
 uint32_t obstacle = 0;
@@ -83,6 +85,8 @@ ble_os_t m_ble_detect;
 APP_TIMER_DEF(m_our_char_timer_id);
 #define OUR_CHAR_TIMER_INTERVAL 		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) //1000 ms intervals
 
+APP_TIMER_DEF(m_our_door_timer_id);
+#define TOGGLE_DOOR_TIMER						APP_TIMER_TICKS(10000, APP_TIMER_PRESCALER) // Interval for closing the door. 10 seconds.
 
 
 static ble_uuid_t       m_adv_uuids[] = {{BLE_UUID_OUR_SERVICE, BLE_UUID_TYPE_VENDOR_BEGIN}}; 
@@ -206,7 +210,7 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
     }
 }
 
-
+ /**
 //make a timer to update value
 static void timer_timeout_handler(void * p_context)
 {
@@ -214,6 +218,50 @@ static void timer_timeout_handler(void * p_context)
 		sensor_characteristic_update(&m_ble_detect, &temperature);
 		nrf_gpio_pin_toggle(LED_4);
 		temperature++;
+		
+		//testing av door_is_closed
+}
+ */
+ 
+/**
+		Sjekker om døren klarte å lukkes uten hindring. Starter en timer som er intervallet porten brukes på å lukkes.
+		Klarer denne timeren å gå til 0 uten å bli avbrutt av en hindring (obstacle == 0), skal den oppdatere characteritics
+		på at porten er lukket vellykket. Hvis ikke sender funksjonen den tilbake til gpio_init() og oppdaterer characteristics
+		på at det kom en hinring. Masteren skal da åpne porten igjen.
+		
+*/
+static void door_is_closed(void * p_context)
+{
+		//*((bool*)p_context)=true;
+		
+		//Testing. 
+		//Kommentar: Testing funket. 
+		if (drive == 1)
+		{
+		uint32_t timer = app_timer_start(m_our_door_timer_id, TOGGLE_DOOR_TIMER, NULL);
+		while( timer != 0)
+				sd_app_evt_wait();
+		
+		nrf_gpio_pin_toggle(LED_3);
+		sensor_characteristic_update(&m_ble_detect, &temperature);
+		temperature++;
+		}
+		/** forslag til funksjon, sent hit fra gpio_init()
+		while(timer != 0 && obstacle == 1)
+				sd_app_evt_wait();
+		
+		if(obstacle == 0)
+		{
+				gpio_init();
+				nrf_gpio_toggle(LED3);
+		}
+		else
+		{
+				nrf_gpio_toggle(LED3);
+				sd_app_evt_wait();						
+		}
+		*/
+		
 }
 
 /**@brief Function for the Timer initialization.
@@ -225,9 +273,11 @@ static void timers_init(void)
 
     // Initialize timer module.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
+		
 
     // OUR_JOB: Step 3.H, Initiate our timer
-		app_timer_create(&m_our_char_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
+		// app_timer_create(&m_our_char_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
+		app_timer_create(&m_our_door_timer_id, APP_TIMER_MODE_SINGLE_SHOT, door_is_closed); 
 }
 
 
@@ -663,12 +713,14 @@ static void buttons_leds_init(bool * p_erase_bonds)
 
 static void gpio_init(void)
  {
-
+    uint32_t	err_code;
+		
+		
 		nrf_gpio_cfg_sense_input(PIN_9, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW); 
 		
 		sensor0 = nrf_gpio_pin_read(PIN_9);
 		
-		if (sensor0 == 1)
+		if (sensor0 == 0)
 		{
 				obstacle = 1;
 				sensor_characteristic_update(&m_ble_detect, &obstacle);
@@ -676,12 +728,19 @@ static void gpio_init(void)
 		}
 		else
 		{
-				obstacle = 0;
+				obstacle = 1;
 				sensor_characteristic_update(&m_ble_detect, &obstacle);
-				nrf_gpio_pin_clear(LED_4);
+				door_is_closed(NULL);
+				nrf_gpio_pin_toggle(LED_4);
 		}
 
  }
+ 
+ static void check_door(void)
+ {
+		
+ }
+ 
 
 /**@brief Function for the Power manager.
  */
@@ -720,6 +779,7 @@ int main(void)
     services_init();
     advertising_init();
     conn_params_init();
+		door_is_closed(NULL);
 
     // Start execution.
 		NRF_LOG_INFO("Template started\r\n");
