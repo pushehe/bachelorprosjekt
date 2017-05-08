@@ -26,7 +26,9 @@ typedef struct
 {
     uint16_t									conn_handle;
     uint16_t									service_handle;     /**< Handle of Our Service (as provided by the BLE stack). */
-    ble_gatts_char_handles_t	char_handles;		
+    ble_gatts_char_handles_t	sensor_handles;
+		ble_gatts_char_handles_t	door_handles;
+		
 }ble_os_t;
 
 /**@brief Function for handling BLE Stack events related to our service and characteristic.
@@ -51,7 +53,7 @@ void ble_detect_init(ble_os_t * p_ble_detect);
  * @param[in]   p_ble_detect            Our Service structure.
  * @param[in]   sensor_value     				New characteristic value.
  */
-void sensor_characteristic_update(ble_os_t *p_ble_detect, uint32_t *sensor_value);
-void door_characteristic_update(ble_os_t *p_ble_detect, uint32_t *sensor_value);
+uint32_t sensor_characteristic_update(ble_os_t *p_ble_detect, uint8_t *sensor_value);
+void door_characteristic_update(ble_os_t *p_ble_detect, uint8_t *door_value);
 
 #endif  /* _ BLE_DETECT_H__ */

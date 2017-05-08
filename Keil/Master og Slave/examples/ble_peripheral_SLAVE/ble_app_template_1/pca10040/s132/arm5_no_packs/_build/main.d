@@ -74,6 +74,8 @@
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\sensorsim\sensorsim.h
 .\_build\main.o: ..\..\..\..\..\..\components\ble\common\ble_conn_state.h
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\util\sdk_mapped_flags.h
+.\_build\main.o: ..\..\..\..\..\..\components\ble\ble_services\ble_hrs\ble_hrs.h
+.\_build\main.o: ..\..\..\..\..\..\components\ble\nrf_ble_gatt\nrf_ble_gatt.h
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\log\nrf_log.h
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\log\src\nrf_log_internal.h
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\log\nrf_log_ctrl.h

@@ -1,6 +1,7 @@
 --cpu=Cortex-M4.fp
 ".\_build\main.o"
 ".\_build\ble_detect.o"
+".\_build\ble_hrs.o"
 ".\_build\boards.o"
 ".\_build\bsp.o"
 ".\_build\bsp_btn_ble.o"
@@ -22,6 +23,7 @@
 ".\_build\pm_mutex.o"
 ".\_build\security_dispatcher.o"
 ".\_build\security_manager.o"
+".\_build\nrf_ble_gatt.o"
 ".\_build\nrf_drv_clock.o"
 ".\_build\nrf_drv_common.o"
 ".\_build\nrf_drv_gpiote.o"

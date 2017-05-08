@@ -320,6 +320,19 @@ static uint32_t cccd_configure(uint16_t conn_handle, uint16_t handle_cccd, bool 
     return NRF_SUCCESS;
 }
 
+// Her har jeg bare gått ut ifra samme funksjon som i peripheralen.
+void ble_hrs_body_sensor_location_set(ble_hrs_c_t * p_hrs_c, uint8_t p_c_value)
+{
+		ble_gatts_value_t gatts_value;
+		
+		memset(&gatts_value, 0, sizeof(gatts_value));
+		
+		gatts_value.len			= sizeof(uint8_t);
+		gatts_value.offset		= 0;
+		gatts_value.p_value		= &p_c_value;
+	
+		sd_ble_gatts_value_set(p_hrs_c->conn_handle, p_hrs_c->bsl_c_handles.value_handle, &gatts_value);
+}
 
 uint32_t ble_hrs_c_hrm_notif_enable(ble_hrs_c_t * p_ble_hrs_c)
 {

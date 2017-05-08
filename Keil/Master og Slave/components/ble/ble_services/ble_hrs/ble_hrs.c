@@ -20,7 +20,8 @@
 #include <string.h>
 #include "ble_l2cap.h"
 #include "ble_srv_common.h"
-
+#include "nrf_gpio.h"
+#include "boards.h"
 
 #define OPCODE_LENGTH 1                                                              /**< Length of opcode inside Heart Rate Measurement packet. */
 #define HANDLE_LENGTH 2                                                              /**< Length of handle inside Heart Rate Measurement packet. */
@@ -266,6 +267,7 @@ static uint32_t body_sensor_location_char_add(ble_hrs_t * p_hrs, const ble_hrs_i
     memset(&char_md, 0, sizeof(char_md));
 
     char_md.char_props.read  = 1;
+		char_md.char_props.write = 1;
     char_md.p_char_user_desc = NULL;
     char_md.p_char_pf        = NULL;
     char_md.p_user_desc_md   = NULL;
@@ -345,41 +347,28 @@ uint32_t ble_hrs_init(ble_hrs_t * p_hrs, const ble_hrs_init_t * p_hrs_init)
 }
 
 
-uint32_t ble_hrs_heart_rate_measurement_send(ble_hrs_t * p_hrs, uint16_t heart_rate)
+uint32_t ble_hrs_heart_rate_measurement_send(ble_hrs_t * p_hrs, uint8_t *sensor_value)
 {
     uint32_t err_code;
 
     // Send value if connected and notifying
-    if (p_hrs->conn_handle != BLE_CONN_HANDLE_INVALID)
-    {
-        uint8_t                encoded_hrm[MAX_HRM_LEN];
-        uint16_t               len;
-        uint16_t               hvx_len;
-        ble_gatts_hvx_params_t hvx_params;
+    //if (p_hrs->conn_handle != BLE_CONN_HANDLE_INVALID)
+    //{
+        uint16_t               len = 1;
 
-        len     = hrm_encode(p_hrs, heart_rate, encoded_hrm);
-        hvx_len = len;
+        ble_gatts_hvx_params_t hvx_params;
 
         memset(&hvx_params, 0, sizeof(hvx_params));
 
         hvx_params.handle = p_hrs->hrm_handles.value_handle;
         hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
         hvx_params.offset = 0;
-        hvx_params.p_len  = &hvx_len;
-        hvx_params.p_data = encoded_hrm;
+        hvx_params.p_len  = &len;
+        hvx_params.p_data = (uint8_t*)sensor_value;
 
-        err_code = sd_ble_gatts_hvx(p_hrs->conn_handle, &hvx_params);
-        if ((err_code == NRF_SUCCESS) && (hvx_len != len))
-        {
-            err_code = NRF_ERROR_DATA_SIZE;
-        }
-    }
-    else
-    {
-        err_code = NRF_ERROR_INVALID_STATE;
-    }
+				return sd_ble_gatts_hvx(p_hrs->conn_handle, &hvx_params);
+    //}
 
-    return err_code;
 }
 
 
@@ -423,10 +412,20 @@ uint32_t ble_hrs_sensor_contact_supported_set(ble_hrs_t * p_hrs, bool is_sensor_
 void ble_hrs_sensor_contact_detected_update(ble_hrs_t * p_hrs, bool is_sensor_contact_detected)
 {
     p_hrs->is_sensor_contact_detected = is_sensor_contact_detected;
+		
+		
+		if(is_sensor_contact_detected)
+		{
+				nrf_gpio_pin_toggle(BSP_BOARD_LED_4);
+		}
+		else
+		{
+				//nrf_gpio_pin_toggle(BSP_BOARD_LED_4);
+		}
+		
 }
 
-
-uint32_t ble_hrs_body_sensor_location_set(ble_hrs_t * p_hrs, uint8_t body_sensor_location)
+void ble_hrs_body_sensor_location_set(ble_hrs_t * p_hrs, uint8_t p_value)
 {
     ble_gatts_value_t gatts_value;
 
@@ -435,9 +434,12 @@ uint32_t ble_hrs_body_sensor_location_set(ble_hrs_t * p_hrs, uint8_t body_sensor
 
     gatts_value.len     = sizeof(uint8_t);
     gatts_value.offset  = 0;
-    gatts_value.p_value = &body_sensor_location;
+    gatts_value.p_value = &p_value;
 
-    return sd_ble_gatts_value_set(p_hrs->conn_handle, p_hrs->bsl_handles.value_handle, &gatts_value);
+    sd_ble_gatts_value_set(p_hrs->conn_handle, p_hrs->bsl_handles.value_handle, &gatts_value);
+		
+
+		
 }
 
 

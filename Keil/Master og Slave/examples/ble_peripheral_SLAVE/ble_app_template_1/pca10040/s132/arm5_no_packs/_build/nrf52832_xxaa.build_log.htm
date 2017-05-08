@@ -22,16 +22,16 @@ Dialog DLL:      TCM.DLL V1.27.0.0
  
 <h2>Project:</h2>
 D:\Programmer\Dropbox\UiA\ELE301 Bachelor\bachelorprosjekt\Keil\Master og Slave\examples\ble_peripheral_SLAVE\ble_app_template_1\pca10040\s132\arm5_no_packs\ble_app_template_pca10040_s132.uvprojx
-Project File Date:  04/23/2017
+Project File Date:  04/26/2017
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 4 (build 422)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'nrf52832_xxaa'
-compiling ble_detect.c...
 linking...
-Program Size: Code=27328 RO-data=1332 RW-data=308 ZI-data=10508  
-FromELF: creating hex file...
-".\_build\nrf52832_xxaa.axf" - 0 Error(s), 0 Warning(s).
+.\_build\nrf52832_xxaa.axf: Error: L6218E: Undefined symbol ble_hrs_heart_rate_measurement_send (referred from main.o).
+Not enough information to list image symbols.
+Finished: 1 information, 0 warning and 1 error messages.
+".\_build\nrf52832_xxaa.axf" - 1 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -58,10 +58,11 @@ Package Vendor: NordicSemiconductor
    * Component: ARM::CMSIS:CORE:4.3.0
 
    * Component: NordicSemiconductor::Device:Startup:8.11.1
-      Source file:   Device\Source\system_nrf52.c
       Source file:   Device\Source\arm\arm_startup_nrf52.s
       Include file:  Device\Include\system_nrf52.h
-Build Time Elapsed:  00:00:02
+      Source file:   Device\Source\system_nrf52.c
+Target not created.
+Build Time Elapsed:  00:00:00
 </pre>
 </body>
 </html>

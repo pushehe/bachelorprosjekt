@@ -26,6 +26,11 @@
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_conn_state.h"
+#include "app_button.h"
+#include "ble_hrs.h"
+#include "nrf_ble_gatt.h"
+#include <D:\Programmer\Dropbox\UiA\ELE301 Bachelor\bachelorprosjekt\Keil\Master og Slave\components\ble\ble_services\ble_hrs\ble_hrs.h>
+
 
 #define NRF_LOG_MODULE_NAME "APP"
 #include "nrf_log.h"
@@ -42,7 +47,7 @@
 #define CENTRAL_LINK_COUNT               0                                          /**<number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT            1                                          /**<number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
-#define DEVICE_NAME                      "NRF_Slave"                          /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                      "Bachelor_peripheral"                          /**< Name of device. Will be included in the advertising data. */
 #define APP_ADV_INTERVAL                 300                                        /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS       180                                        /**< The advertising timeout in units of seconds. */
 
@@ -69,11 +74,14 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-								
-uint32_t drive = 1;
-uint32_t temperature = 0;
-uint32_t sensor0 = 0;
-uint32_t obstacle = 0;
+
+#define ADVERTISING_LED_PIN             BSP_BOARD_LED_0                             /**< Is on when device is advertising. */
+#define CONNECTED_LED_PIN               BSP_BOARD_LED_1                             /**< Is on when device has connected. */
+#define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)    /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
+#define LEDBUTTON_BUTTON_PIN            BSP_BUTTON_0                                /**< Button that will trigger the notification event with the LED Button Service */								
+static ble_hrs_t m_hrs;                                   /**< Structure used to identify the heart rate service. */
+
+uint16_t obstacle = 0;
 #define PIN_9 9
 
 static uint16_t                          m_conn_handle = BLE_CONN_HANDLE_INVALID;   /**< Handle of the current connection. */
@@ -85,8 +93,8 @@ ble_os_t m_ble_detect;
 APP_TIMER_DEF(m_our_char_timer_id);
 #define OUR_CHAR_TIMER_INTERVAL 		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) //1000 ms intervals
 
-APP_TIMER_DEF(m_our_door_timer_id);
-#define TOGGLE_DOOR_TIMER						APP_TIMER_TICKS(10000, APP_TIMER_PRESCALER) // Interval for closing the door. 10 seconds.
+//APP_TIMER_DEF(m_our_door_timer_id);
+//#define TOGGLE_DOOR_TIMER						APP_TIMER_TICKS(10000, APP_TIMER_PRESCALER) // Interval for closing the door. 10 seconds.
 
 
 static ble_uuid_t       m_adv_uuids[] = {{BLE_UUID_OUR_SERVICE, BLE_UUID_TYPE_VENDOR_BEGIN}}; 
@@ -123,6 +131,7 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
         case PM_EVT_BONDED_PEER_CONNECTED:
         {
             NRF_LOG_INFO("Connected to a previously bonded device.\r\n");
+						nrf_gpio_pin_toggle(LED_3);
         } break;
 
         case PM_EVT_CONN_SEC_SUCCEEDED:
@@ -230,9 +239,11 @@ static void timer_timeout_handler(void * p_context)
 		på at det kom en hinring. Masteren skal da åpne porten igjen.
 		
 */
+
+/**
 static void door_is_closed(void * p_context)
 {
-		//*((bool*)p_context)=true;
+		//((bool*)p_context)=true;
 		
 		//Testing. 
 		//Kommentar: Testing funket. 
@@ -246,7 +257,7 @@ static void door_is_closed(void * p_context)
 		sensor_characteristic_update(&m_ble_detect, &temperature);
 		temperature++;
 		}
-		/** forslag til funksjon, sent hit fra gpio_init()
+		 forslag til funksjon, sent hit fra gpio_init()
 		while(timer != 0 && obstacle == 1)
 				sd_app_evt_wait();
 		
@@ -260,8 +271,19 @@ static void door_is_closed(void * p_context)
 				nrf_gpio_toggle(LED3);
 				sd_app_evt_wait();						
 		}
-		*/
+
 		
+}
+*/
+
+/**@brief Function for the LEDs initialization.
+ *
+ * @details Initializes all LEDs used by the application.
+ */
+
+static void leds_init(void)
+{
+    bsp_board_leds_init();
 }
 
 /**@brief Function for the Timer initialization.
@@ -277,7 +299,7 @@ static void timers_init(void)
 
     // OUR_JOB: Step 3.H, Initiate our timer
 		// app_timer_create(&m_our_char_timer_id, APP_TIMER_MODE_REPEATED, timer_timeout_handler);
-		app_timer_create(&m_our_door_timer_id, APP_TIMER_MODE_SINGLE_SHOT, door_is_closed); 
+		//app_timer_create(&m_our_door_timer_id, APP_TIMER_MODE_SINGLE_SHOT, door_is_closed); 
 }
 
 
@@ -431,7 +453,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
  *
  * @param[in] p_ble_evt  Bluetooth stack event.
  */
-
+ /**
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
     uint32_t err_code = NRF_SUCCESS;
@@ -449,6 +471,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             APP_ERROR_CHECK(err_code);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+						
             break; // BLE_GAP_EVT_CONNECTED
 
         case BLE_GATTC_EVT_TIMEOUT:
@@ -514,7 +537,114 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             break;
     }
 }
+ */
+ 
+ static void on_ble_evt(ble_evt_t * p_ble_evt)
+{
+    uint32_t err_code;
 
+    switch (p_ble_evt->header.evt_id)
+    {
+        case BLE_GAP_EVT_CONNECTED:
+            NRF_LOG_INFO("Connected\r\n");
+            bsp_board_led_on(CONNECTED_LED_PIN);
+            bsp_board_led_off(ADVERTISING_LED_PIN);
+            m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+
+            err_code = app_button_enable();
+            APP_ERROR_CHECK(err_code);
+            break; // BLE_GAP_EVT_CONNECTED
+
+        case BLE_GAP_EVT_DISCONNECTED:
+            NRF_LOG_INFO("Disconnected\r\n");
+            bsp_board_led_on(ADVERTISING_LED_PIN);
+						bsp_board_led_off(CONNECTED_LED_PIN);
+            m_conn_handle = BLE_CONN_HANDLE_INVALID;
+
+            err_code = app_button_disable();
+            APP_ERROR_CHECK(err_code);
+
+            advertising_start();
+            break; // BLE_GAP_EVT_DISCONNECTED
+
+        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
+            // Pairing not supported
+            err_code = sd_ble_gap_sec_params_reply(m_conn_handle,
+                                                   BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP,
+                                                   NULL,
+                                                   NULL);
+            APP_ERROR_CHECK(err_code);
+            break; // BLE_GAP_EVT_SEC_PARAMS_REQUEST
+
+        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+            // No system attributes have been stored.
+            err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
+            APP_ERROR_CHECK(err_code);
+            break; // BLE_GATTS_EVT_SYS_ATTR_MISSING
+
+        case BLE_GATTC_EVT_TIMEOUT:
+            // Disconnect on GATT Client timeout event.
+            NRF_LOG_DEBUG("GATT Client Timeout.\r\n");
+            err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
+                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            APP_ERROR_CHECK(err_code);
+            break; // BLE_GATTC_EVT_TIMEOUT
+
+        case BLE_GATTS_EVT_TIMEOUT:
+            // Disconnect on GATT Server timeout event.
+            NRF_LOG_DEBUG("GATT Server Timeout.\r\n");
+            err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
+                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            APP_ERROR_CHECK(err_code);
+            break; // BLE_GATTS_EVT_TIMEOUT
+
+        case BLE_EVT_USER_MEM_REQUEST:
+            err_code = sd_ble_user_mem_reply(p_ble_evt->evt.gattc_evt.conn_handle, NULL);
+            APP_ERROR_CHECK(err_code);
+            break; // BLE_EVT_USER_MEM_REQUEST
+
+        case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
+        {
+            ble_gatts_evt_rw_authorize_request_t  req;
+            ble_gatts_rw_authorize_reply_params_t auth_reply;
+
+            req = p_ble_evt->evt.gatts_evt.params.authorize_request;
+
+            if (req.type != BLE_GATTS_AUTHORIZE_TYPE_INVALID)
+            {
+                if ((req.request.write.op == BLE_GATTS_OP_PREP_WRITE_REQ)     ||
+                    (req.request.write.op == BLE_GATTS_OP_EXEC_WRITE_REQ_NOW) ||
+                    (req.request.write.op == BLE_GATTS_OP_EXEC_WRITE_REQ_CANCEL))
+                {
+                    if (req.type == BLE_GATTS_AUTHORIZE_TYPE_WRITE)
+                    {
+                        auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_WRITE;
+                    }
+                    else
+                    {
+                        auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_READ;
+                    }
+                    auth_reply.params.write.gatt_status = APP_FEATURE_NOT_SUPPORTED;
+                    err_code = sd_ble_gatts_rw_authorize_reply(p_ble_evt->evt.gatts_evt.conn_handle,
+                                                               &auth_reply);
+                    APP_ERROR_CHECK(err_code);
+                }
+            }
+        } break; // BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST
+
+#if (NRF_SD_BLE_API_VERSION == 3)
+        case BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST:
+            err_code = sd_ble_gatts_exchange_mtu_reply(p_ble_evt->evt.gatts_evt.conn_handle,
+                                                       NRF_BLE_MAX_MTU_SIZE);
+            APP_ERROR_CHECK(err_code);
+            break; // BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST
+#endif
+
+        default:
+            // No implementation needed.
+            break;
+    }
+}
 /**@brief Function for dispatching a BLE stack event to all modules with a BLE stack event handler.
  *
  * @details This function is called from the BLE Stack event interrupt handler after a BLE stack
@@ -662,6 +792,7 @@ static void peer_manager_init(bool erase_bonds)
 }
 
 
+
 /**@brief Function for initializing the Advertising functionality.
  */
 static void advertising_init(void)
@@ -696,6 +827,7 @@ static void advertising_init(void)
  *
  * @param[out] p_erase_bonds  Will be true if the clear bonding button was pressed to wake the application up.
  */
+ /**
 static void buttons_leds_init(bool * p_erase_bonds)
 {
     bsp_event_t startup_event;
@@ -710,12 +842,80 @@ static void buttons_leds_init(bool * p_erase_bonds)
 
     *p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
 }
+ */
+ 		
+/**
+static void gpio_event_handler(uint8_t pin_no, uint8_t button_action)
+{
+		uint32_t err_code;
+		obstacle++;
+		//ble_gatts_value_t hehe;
+		//uint8_t *value = hehe.p_value;
+		
+		switch (pin_no)
+		{
+				case LEDBUTTON_BUTTON_PIN:
+						err_code = sensor_characteristic_update(&m_ble_detect, &obstacle);
+						nrf_gpio_pin_toggle(LED_4);
+						if (err_code != NRF_SUCCESS &&
+								err_code != BLE_ERROR_INVALID_CONN_HANDLE	&&
+								err_code != NRF_ERROR_INVALID_STATE)
+						{
+								APP_ERROR_CHECK(err_code);
+						}
+				    break;
+						
+				default:
+						APP_ERROR_HANDLER(pin_no);
+						break;
+		}				
+}
+ */
+
+static void gpio_event_handler(uint8_t pin_no, uint8_t button_action)
+{
+		uint32_t err_code;
+		uint16_t obstacle = 1;
+		//ble_gatts_value_t hehe;
+		//uint8_t *value = hehe.p_value;
+		
+		switch (pin_no)
+		{
+				case LEDBUTTON_BUTTON_PIN:
+						err_code = ble_hrs_heart_rate_measurement_send(&m_hrs, obstacle);
+						nrf_gpio_pin_toggle(LED_4);
+					  if (err_code != NRF_SUCCESS &&
+								err_code != BLE_ERROR_INVALID_CONN_HANDLE	&&
+								err_code != NRF_ERROR_INVALID_STATE)
+						{
+								APP_ERROR_CHECK(err_code);
+						}
+				    break;
+						
+				default:
+						APP_ERROR_HANDLER(pin_no);
+						break;
+		}				
+}
+
+
 
 static void gpio_init(void)
  {
-    uint32_t	err_code;
 		
+	  
+		uint32_t	err_code;	
+		static app_button_cfg_t button[] = 
+		{
+				{LEDBUTTON_BUTTON_PIN, false, NRF_GPIO_PIN_PULLUP, gpio_event_handler}
+		};
 		
+		err_code = app_button_init(button, sizeof(button) / sizeof(button[0]), BUTTON_DETECTION_DELAY);
+		APP_ERROR_CHECK(err_code);
+
+
+		
+		/**
 		nrf_gpio_cfg_sense_input(PIN_9, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW); 
 		
 		sensor0 = nrf_gpio_pin_read(PIN_9);
@@ -733,14 +933,10 @@ static void gpio_init(void)
 				door_is_closed(NULL);
 				nrf_gpio_pin_toggle(LED_4);
 		}
+		 */
 
  }
- 
- static void check_door(void)
- {
-		
- }
- 
+
 
 /**@brief Function for the Power manager.
  */
@@ -754,9 +950,9 @@ static void power_manage(void)
  */
 static void advertising_start(void)
 {
-    uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-
+		uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
+		bsp_board_led_on(ADVERTISING_LED_PIN);
 }
 
 /**@brief Function for application main entry.
@@ -767,8 +963,12 @@ int main(void)
     bool erase_bonds;
 
     // Initialize.
-    timers_init();
-    buttons_leds_init(&erase_bonds);
+		leds_init();
+    timers_init(); 
+    // buttons_leds_init(&erase_bonds);
+		
+		gpio_init();
+		//set_door_button();
     ble_stack_init();
     peer_manager_init(erase_bonds);
 		if (erase_bonds == true)
@@ -779,18 +979,26 @@ int main(void)
     services_init();
     advertising_init();
     conn_params_init();
-		door_is_closed(NULL);
+		
+
+
+		//door_is_closed(NULL);
 
     // Start execution.
 		NRF_LOG_INFO("Template started\r\n");
     application_timers_start();
-    err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-    APP_ERROR_CHECK(err_code);
+    advertising_start();
+		//err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+    //APP_ERROR_CHECK(err_code);	
+		
 
     // Enter main loop.
     for (;;)
     {
-        power_manage();
+				if (NRF_LOG_PROCESS() == false)
+				{
+						power_manage();
+				}
     }
 }
 

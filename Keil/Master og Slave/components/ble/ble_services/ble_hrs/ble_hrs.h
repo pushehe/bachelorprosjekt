@@ -65,6 +65,7 @@ extern "C" {
 
 #define BLE_HRS_MAX_BUFFERED_RR_INTERVALS       20      /**< Size of RR Interval buffer inside service. */
 
+
 /**@brief Heart Rate Service event type. */
 typedef enum
 {
@@ -154,7 +155,7 @@ void ble_hrs_on_ble_evt(ble_hrs_t * p_hrs, ble_evt_t * p_ble_evt);
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-uint32_t ble_hrs_heart_rate_measurement_send(ble_hrs_t * p_hrs, uint16_t heart_rate);
+uint32_t ble_hrs_heart_rate_measurement_send(ble_hrs_t * p_hrs, uint8_t *sensor_value);
 
 /**@brief Function for adding a RR Interval measurement to the RR Interval buffer.
  *
@@ -192,6 +193,8 @@ uint32_t ble_hrs_sensor_contact_supported_set(ble_hrs_t * p_hrs, bool is_sensor_
  */
 void ble_hrs_sensor_contact_detected_update(ble_hrs_t * p_hrs, bool is_sensor_contact_detected);
 
+//uint32_t body_sensor_location_callback(uint8_t * p_ble_evt);
+
 /**@brief Function for setting the Body Sensor Location.
  *
  * @details Sets a new value of the Body Sensor Location characteristic. The new value will be sent
@@ -202,7 +205,7 @@ void ble_hrs_sensor_contact_detected_update(ble_hrs_t * p_hrs, bool is_sensor_co
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-uint32_t ble_hrs_body_sensor_location_set(ble_hrs_t * p_hrs, uint8_t body_sensor_location);
+void ble_hrs_body_sensor_location_set(ble_hrs_t * p_hrs, uint8_t door_value);
 
 
 #ifdef __cplusplus

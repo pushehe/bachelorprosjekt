@@ -38,6 +38,7 @@
 #include "ble.h"
 #include "ble_db_discovery.h"
 #include "sdk_config.h"
+#include "nrf_ble_gatt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,13 +60,11 @@ extern "C" {
  */
 
 /**@brief HRS Client event type. */
-/**
 typedef enum
 {
-    BLE_HRS_C_EVT_DISCOVERY_COMPLETE = 1,  < Event indicating that the Heart Rate Service has been discovered at the peer.
-    BLE_HRS_C_EVT_HRM_NOTIFICATION         /< Event indicating that a notification of the Heart Rate Measurement characteristic has been received from the peer. 
-} ble_hrs_c_evt_type_t; */
-
+    BLE_HRS_C_EVT_DISCOVERY_COMPLETE = 1,  /**< Event indicating that the Heart Rate Service has been discovered at the peer. */
+    BLE_HRS_C_EVT_HRM_NOTIFICATION         /**< Event indicating that a notification of the Heart Rate Measurement characteristic has been received from the peer. */
+} ble_hrs_c_evt_type_t;
 
 /** @} */
 
@@ -120,6 +119,7 @@ typedef struct ble_hrs_c_s ble_hrs_c_t;
  */
 typedef void (* ble_hrs_c_evt_handler_t) (ble_hrs_c_t * p_ble_hrs_c, ble_hrs_c_evt_t * p_evt);
 
+
 /** @} */
 
 /**
@@ -131,9 +131,10 @@ typedef void (* ble_hrs_c_evt_handler_t) (ble_hrs_c_t * p_ble_hrs_c, ble_hrs_c_e
  */
 struct ble_hrs_c_s
 {
-    uint16_t                conn_handle;      /**< Connection handle as provided by the SoftDevice. */
-    hrs_db_t                peer_hrs_db;      /**< Handles related to HRS on the peer*/
-    ble_hrs_c_evt_handler_t evt_handler;      /**< Application event handler to be called when there is an event related to the heart rate service. */
+    uint16_t                		conn_handle;      /**< Connection handle as provided by the SoftDevice. */
+    hrs_db_t                		peer_hrs_db;      /**< Handles related to HRS on the peer*/
+    ble_hrs_c_evt_handler_t 		evt_handler;      /**< Application event handler to be called when there is an event related to the heart rate service. */
+		ble_gatts_char_handles_t	  bsl_c_handles;	
 };
 
 /**@brief Heart Rate Client initialization structure.
@@ -209,6 +210,7 @@ uint32_t ble_hrs_c_hrm_notif_enable(ble_hrs_c_t * p_ble_hrs_c);
  */
 void ble_hrs_on_db_disc_evt(ble_hrs_c_t * p_ble_hrs_c, const ble_db_discovery_evt_t * p_evt);
 
+void ble_hrs_body_sensor_location_set(ble_hrs_c_t * p_hrs_c, uint8_t p_c_value);
 
 /**@brief     Function for assigning a handles to a this instance of hrs_c.
  *
